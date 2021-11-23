@@ -1,0 +1,13 @@
+diff --git a/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py b/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py
+index 918d3e788..45666beeb 100644
+--- a/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py
++++ b/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py
+@@ -168,7 +168,7 @@ class EmbedThumbnailPP(FFmpegPostProcessor):
+             if not success:
+                 success = True
+                 atomicparsley = next((
+-                    x for x in ['AtomicParsley', 'atomicparsley']
++                    x for x in ['libatomicparsley.bin.so', 'AtomicParsley', 'atomicparsley']
+                     if check_executable(x, ['-v'])), None)
+                 if atomicparsley is None:
+                     raise EmbedThumbnailPPError('AtomicParsley was not found. Please install')
