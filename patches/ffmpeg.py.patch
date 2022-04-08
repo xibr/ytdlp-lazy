@@ -1,17 +1,17 @@
 diff --git a/yt-dlp/yt_dlp/postprocessor/ffmpeg.py b/yt-dlp/yt_dlp/postprocessor/ffmpeg.py
-index eacee8ee9..69ab76048 100644
+index 27d06cbde..c646320ea 100644
 --- a/yt-dlp/yt_dlp/postprocessor/ffmpeg.py
 +++ b/yt-dlp/yt_dlp/postprocessor/ffmpeg.py
-@@ -86,7 +86,7 @@ class FFmpegPostProcessor(PostProcessor):
-         return FFmpegPostProcessor.get_version_and_features(downloader)[0]
+@@ -91,7 +91,7 @@ def get_versions(downloader=None):
+     _version_cache, _features_cache = {}, {}
  
      def _determine_executables(self):
 -        programs = ['avprobe', 'avconv', 'ffmpeg', 'ffprobe']
 +        programs = ['avprobe', 'avconv', 'ffmpeg', 'ffprobe', 'libffmpeg.bin.so', 'libffprobe.bin.so']
  
          def get_ffmpeg_version(path, prog):
-             out = _get_exe_version_output(path, ['-bsfs'])
-@@ -136,7 +136,7 @@ class FFmpegPostProcessor(PostProcessor):
+             if path in self._version_cache:
+@@ -144,7 +144,7 @@ def get_ffmpeg_version(path, prog):
                  basename = os.path.splitext(os.path.basename(location))[0]
                  basename = next((p for p in programs if basename.startswith(p)), 'ffmpeg')
                  dirname = os.path.dirname(os.path.abspath(location))
@@ -20,30 +20,16 @@ index eacee8ee9..69ab76048 100644
                      prefer_ffmpeg = True
  
              self._paths = dict(
-@@ -149,18 +149,18 @@ class FFmpegPostProcessor(PostProcessor):
-             get_ffmpeg_version(self._paths[p], p)
+@@ -153,7 +153,7 @@ def get_ffmpeg_version(path, prog):
+                 self._paths[basename] = location
  
+         self._versions = {}
+-        executables = {'basename': ('ffmpeg', 'avconv'), 'probe_basename': ('ffprobe', 'avprobe')}
++        executables = {'basename': ('ffmpeg', 'avconv', 'libffmpeg.bin.so'), 'probe_basename': ('ffprobe', 'avprobe', 'libffprobe.bin.so')}
          if prefer_ffmpeg is False:
--            prefs = ('avconv', 'ffmpeg')
-+            prefs = ('avconv', 'ffmpeg', 'libffmpeg.bin.so')
-         else:
--            prefs = ('ffmpeg', 'avconv')
-+            prefs = ('libffmpeg.bin.so', 'ffmpeg', 'avconv')
-         for p in prefs:
-             if self._versions[p]:
-                 self.basename = p
-                 break
- 
-         if prefer_ffmpeg is False:
--            prefs = ('avprobe', 'ffprobe')
-+            prefs = ('avprobe', 'ffprobe', 'libffprobe.bin.so')
-         else:
--            prefs = ('ffprobe', 'avprobe')
-+            prefs = ('libffprobe.bin.so', 'ffprobe', 'avprobe')
-         for p in prefs:
-             if self._versions[p]:
-                 self.probe_basename = p
-@@ -280,7 +280,7 @@ class FFmpegPostProcessor(PostProcessor):
+             executables = {k: v[::-1] for k, v in executables.items()}
+         for var, prefs in executables.items():
+@@ -297,7 +297,7 @@ def real_run_ffmpeg(self, input_path_opts, output_path_opts, *, expected_retcode
  
          cmd = [encodeFilename(self.executable, True), encodeArgument('-y')]
          # avconv does not have repeat option
