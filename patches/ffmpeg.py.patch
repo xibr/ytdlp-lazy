@@ -1,47 +1,58 @@
 diff --git a/yt-dlp/yt_dlp/postprocessor/ffmpeg.py b/yt-dlp/yt_dlp/postprocessor/ffmpeg.py
-index 09eb33b8d..9e1c36b78 100644
+index 0c8d4611d..08d8ff337 100644
 --- a/yt-dlp/yt_dlp/postprocessor/ffmpeg.py
 +++ b/yt-dlp/yt_dlp/postprocessor/ffmpeg.py
-@@ -85,7 +85,7 @@ def get_versions(downloader=None):
-     _version_cache, _features_cache = {}, {}
+@@ -95,7 +95,7 @@ def get_versions_and_features(downloader=None):
+     def get_versions(downloader=None):
+         return FFmpegPostProcessor.get_versions_and_features(downloader)[0]
+ 
+-    _ffmpeg_to_avconv = {'ffmpeg': 'avconv', 'ffprobe': 'avprobe'}
++    _ffmpeg_to_avconv = {'libffmpeg.bin.so': 'avconv', 'libffprobe.bin.so': 'avprobe'}
  
      def _determine_executables(self):
--        programs = ['avprobe', 'avconv', 'ffmpeg', 'ffprobe']
-+        programs = ['avprobe', 'avconv', 'libffmpeg.bin.so', 'libffprobe.bin.so']
+         programs = [*self._ffmpeg_to_avconv.keys(), *self._ffmpeg_to_avconv.values()]
+@@ -111,7 +111,7 @@ def _determine_executables(self):
+             dirname, basename = location, None
+         else:
+             basename = os.path.splitext(os.path.basename(location))[0]
+-            basename = next((p for p in programs if basename.startswith(p)), 'ffmpeg')
++            basename = next((p for p in programs if basename.startswith(p)), 'libffmpeg.bin.so')
+             dirname = os.path.dirname(os.path.abspath(location))
+             if basename in self._ffmpeg_to_avconv.keys():
+                 self._prefer_ffmpeg = True
+@@ -140,7 +140,7 @@ def _get_ffmpeg_version(self, prog):
+                 if mobj:
+                     ver = mobj.group(1)
+         self._version_cache[path] = ver
+-        if prog != 'ffmpeg' or not out:
++        if prog != 'libffmpeg.bin.so' or not out:
+             return ver, {}
  
-         def get_ffmpeg_version(path, prog):
-             if path in self._version_cache:
-@@ -104,7 +104,7 @@ def get_ffmpeg_version(path, prog):
-                     if mobj:
-                         ver = mobj.group(1)
-             self._versions[prog] = self._version_cache[path] = ver
--            if prog != 'ffmpeg' or not out:
-+            if prog != 'libffmpeg.bin.so' or not out:
-                 return
+         mobj = re.search(r'(?m)^\s+libavformat\s+(?:[0-9. ]+)\s+/\s+(?P<runtime>[0-9. ]+)', out)
+@@ -172,7 +172,7 @@ def _get_version(self, kind):
+             executables = reversed(executables)
+         basename, version, features = next(filter(
+             lambda x: x[1], ((p, *self._get_ffmpeg_version(p)) for p in executables)), (None, None, {}))
+-        if kind == 'ffmpeg':
++        if kind == 'libffmpeg.bin.so':
+             self.basename, self._features = basename, features
+         else:
+             self.probe_basename = basename
+@@ -183,11 +183,11 @@ def _get_version(self, kind):
  
-             mobj = re.search(r'(?m)^\s+libavformat\s+(?:[0-9. ]+)\s+/\s+(?P<runtime>[0-9. ]+)', out)
-@@ -136,9 +136,9 @@ def get_ffmpeg_version(path, prog):
-                 dirname, basename = location, None
-             else:
-                 basename = os.path.splitext(os.path.basename(location))[0]
--                basename = next((p for p in programs if basename.startswith(p)), 'ffmpeg')
-+                basename = next((p for p in programs if basename.startswith(p)), 'libffmpeg.bin.so')
-                 dirname = os.path.dirname(os.path.abspath(location))
--                if basename in ('ffmpeg', 'ffprobe'):
-+                if basename in ('libffmpeg.bin.so', 'libffprobe.bin.so'):
-                     prefer_ffmpeg = True
+     @functools.cached_property
+     def _version(self):
+-        return self._get_version('ffmpeg')
++        return self._get_version('libffmpeg.bin.so')
  
-             self._paths = {
-@@ -148,7 +148,7 @@ def get_ffmpeg_version(path, prog):
+     @functools.cached_property
+     def _probe_version(self):
+-        return self._get_version('ffprobe')
++        return self._get_version('libffprobe.bin.so')
  
-         self._versions = {}
-         # NB: probe must be first for _features to be poulated correctly
--        executables = {'probe_basename': ('ffprobe', 'avprobe'), 'basename': ('ffmpeg', 'avconv')}
-+        executables = {'probe_basename': ('libffprobe.bin.so', 'avprobe'), 'basename': ('libffmpeg.bin.so', 'avconv')}
-         if prefer_ffmpeg is False:
-             executables = {k: v[::-1] for k, v in executables.items()}
-         for var, prefs in executables.items():
-@@ -231,7 +231,7 @@ def get_audio_codec(self, path):
+     @property
+     def available(self):
+@@ -263,7 +263,7 @@ def get_audio_codec(self, path):
          return None
  
      def get_metadata_object(self, path, opts=[]):
@@ -50,7 +61,7 @@ index 09eb33b8d..9e1c36b78 100644
              if self.probe_available:
                  self.report_warning('Only ffprobe is supported for metadata extraction')
              raise PostProcessingError('ffprobe not found. Please install or provide the path using --ffmpeg-location')
-@@ -291,7 +291,7 @@ def real_run_ffmpeg(self, input_path_opts, output_path_opts, *, expected_retcode
+@@ -322,7 +322,7 @@ def real_run_ffmpeg(self, input_path_opts, output_path_opts, *, expected_retcode
  
          cmd = [encodeFilename(self.executable, True), encodeArgument('-y')]
          # avconv does not have repeat option
