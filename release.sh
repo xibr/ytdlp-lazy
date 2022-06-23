@@ -43,7 +43,7 @@ case "$1" in
 esac
 done
 
-version=`git --git-dir=yt-dlp/.git describe --tags --abbrev=0`
+version="$(curl https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest -s | jq .tag_name -r)"
 major_version=$(echo "$version" | sed -n 's#^\([0-9]*\.[0-9]*\.[0-9]*\).*#\1#p')
 #if test "$major_version" '!=' "$(date '+%Y.%m.%d')"; then
 #    echo "$version does not start with today's date!"
@@ -55,13 +55,13 @@ if test -z "$major_version"; then
     exit 1
 fi
 
-#if [ ! -z "`git tag | grep "$version"`" ]; then echo 'version already present'; exit 0; fi
+if [ ! -z "`git tag | grep "$version"`" ]; then echo 'version already present'; exit 0; fi
 
 cd yt-dlp
 git checkout $version
 if [ ! -z "`git status --porcelain | grep -v CHANGELOG`" ]; then echo 'ERROR: the working directory is not clean; commit or stash changes'; exit 1; fi
-#useless_files=$(find yt_dlp -type f -not -name '*.py')
-#if [ ! -z "$useless_files" ]; then echo "ERROR: Non-.py files in yt_dlp: $useless_files"; exit 1; fi
+useless_files=$(find yt_dlp -type f -not -name '*.py')
+if [ ! -z "$useless_files" ]; then echo "ERROR: Non-.py files in yt_dlp: $useless_files"; exit 1; fi
 if ! type pandoc >/dev/null 2>/dev/null; then echo 'ERROR: pandoc is missing'; exit 1; fi
 if ! python3 -c 'import rsa' 2>/dev/null; then echo 'ERROR: python3-rsa is missing'; exit 1; fi
 if ! python3 -c 'import wheel' 2>/dev/null; then echo 'ERROR: wheel is missing'; exit 1; fi
