@@ -1,13 +1,13 @@
 diff --git a/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py b/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py
-index 606d90d3d..df3adc6ec 100644
+index 9ae59a7c3..153064f9d 100644
 --- a/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py
 +++ b/yt-dlp/yt_dlp/postprocessor/embedthumbnail.py
-@@ -139,7 +139,7 @@ def run(self, info):
-             if not success:
+@@ -140,7 +140,7 @@ def run(self, info):
                  success = True
                  atomicparsley = next((
--                    x for x in ['AtomicParsley', 'atomicparsley']
-+                    x for x in ['libatomicparsley.bin.so', 'AtomicParsley', 'atomicparsley']
+                     # libatomicparsley.so : See https://github.com/xibr/ytdlp-lazy/issues/1
+-                    x for x in ['AtomicParsley', 'atomicparsley', 'libatomicparsley.so']
++                    x for x in ['AtomicParsley', 'atomicparsley', 'libatomicparsley.bin.so']
                      if check_executable(x, ['-v'])), None)
                  if atomicparsley is None:
                      self.to_screen('Neither mutagen nor AtomicParsley was found. Falling back to ffmpeg')
